@@ -1,0 +1,337 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}{{ story.title }} — Novera{% endblock %}
+
+{% block content %}
+<div class="container nv-page">
+
+    <nav class="nv-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}">Library</a>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <a href="{% url 'home' %}?genre={{ story.genre|urlencode }}">{{ story.genre|capfirst }}</a>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <span class="is-current" aria-current="page">{{ story.title }}</span>
+    </nav>
+
+    <div class="row g-4 g-lg-5">
+
+        <!-- Left column: cover and meta -->
+        <div class="col-lg-4">
+            <div class="nv-detail-aside">
+                <!-- Mobile-only introduction so the title comes before the cover -->
+                <header class="nv-detail-mobile-head d-lg-none">
+                    <div class="nv-tag-row">
+                        <span class="nv-pill nv-pill--{{ story.status|lower }}">{{ story.status }}</span>
+                        <span class="nv-pill nv-pill--ghost">{{ story.genre|capfirst }}</span>
+                    </div>
+
+                    <h1 class="nv-detail-title">{{ story.title }}</h1>
+
+                    <p class="nv-detail-author">
+                        <span class="nv-avatar" aria-hidden="true">{{ story.author_name|first }}</span>
+                        <span>by <strong>{{ story.author_name }}</strong></span>
+                        <span class="nv-dot" aria-hidden="true"></span>
+                        <span>{{ story.date_published|date:"F j, Y" }}</span>
+                    </p>
+                </header>
+
+                <div class="nv-detail-cover">
+                    {% if story.cover_image %}
+                        <img src="{{ story.cover_image.url }}" alt="Cover of {{ story.title }}">
+                    {% else %}
+                        <span class="nv-cover-fallback">
+                            <span class="nv-cover-fallback__letter" aria-hidden="true">{{ story.title|first }}</span>
+                            <span class="nv-cover-fallback__name">{{ story.title }}</span>
+                        </span>
+                    {% endif %}
+                </div>
+
+                <dl class="nv-meta-list">
+                    <div>
+                        <dt>Genre</dt>
+                        <dd><span class="nv-pill nv-pill--ghost">{{ story.genre|capfirst }}</span></dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd><span class="nv-pill nv-pill--{{ story.status|lower }}">{{ story.status }}</span></dd>
+                    </div>
+                    <div>
+                        <dt>Chapters</dt>
+                        <dd>{{ story.chapter }} chapter{{ story.chapter|pluralize }}</dd>
+                    </div>
+                    <div>
+                        <dt>Published</dt>
+                        <dd>{{ story.date_published|date:"M j, Y" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Last updated</dt>
+                        <dd>{{ story.updated_at|date:"M j, Y" }}</dd>
+                    </div>
+                </dl>
+
+                {% if user.is_authenticated %}
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'story_edit' story.pk %}" class="btn btn-primary">
+                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            Edit story
+                        </a>
+                        <a href="{% url 'story_confirm_delete' story.pk %}" class="btn btn-ghost-danger">
+                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                            Delete story
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right column: story details -->
+        <div class="col-lg-8">
+            <div class="d-none d-lg-block">
+                <div class="nv-tag-row">
+                    <span class="nv-pill nv-pill--{{ story.status|lower }}">{{ story.status }}</span>
+                    <span class="nv-pill nv-pill--ghost">{{ story.genre|capfirst }}</span>
+                </div>
+
+                <h1 class="nv-detail-title">{{ story.title }}</h1>
+
+                <p class="nv-detail-author">
+                    <span class="nv-avatar" aria-hidden="true">{{ story.author_name|first }}</span>
+                    <span>by <strong>{{ story.author_name }}</strong></span>
+                    <span class="nv-dot" aria-hidden="true"></span>
+                    <span>{{ story.date_published|date:"F j, Y" }}</span>
+                </p>
+            </div>
+
+            <div class="nv-stat-row">
+                <div class="nv-stat-row__item">
+                    <span class="nv-stat-row__label">Rating</span>
+                    <span class="nv-stat-row__value">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        {{ story.rating|floatformat:1 }}<small>/ 5</small>
+                    </span>
+                </div>
+                <div class="nv-stat-row__item">
+                    <span class="nv-stat-row__label">Views</span>
+                    <span class="nv-stat-row__value">
+                        {{ story.views_count }}<small>reads</small>
+                    </span>
+                </div>
+                <div class="nv-stat-row__item">
+                    <span class="nv-stat-row__label">Chapters</span>
+                    <span class="nv-stat-row__value">
+                        {{ story.chapter }}<small>total</small>
+                    </span>
+                </div>
+            </div>
+
+            <section class="nv-prose-card">
+                <h2><i class="fa-solid fa-align-left" aria-hidden="true"></i>About this story</h2>
+                <div class="nv-prose">
+                    {{ story.description|linebreaks }}
+                </div>
+            </section>
+
+            <!-- Ratings & reviews -->
+            <section class="nv-panel" aria-labelledby="reviewsHeading">
+                <div class="nv-panel__head">
+                    <h2 id="reviewsHeading">
+                        <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                        Reader notes
+                    </h2>
+                    {% if ratings %}
+                        <span class="nv-panel__hint">
+                            {{ ratings|length }} recent rating{{ ratings|length|pluralize }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="nv-panel__body">
+                    {% if ratings %}
+                        <div class="nv-rating-summary">
+                            <span class="nv-rating-summary__score">
+                                {{ avg_rating|floatformat:1 }}<small>/5</small>
+                            </span>
+                            <div>
+                                <div class="nv-stars" aria-hidden="true">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= avg_rating %}
+                                            <i class="fa-solid fa-star"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-star is-empty"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="nv-rating-summary__meta">Recent average score</div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if rating_form %}
+                        <div class="nv-rating-form">
+                            <h3>Leave a rating</h3>
+                            <p class="nv-rating-hint mb-3">Pick a star, then add a note if you'd like.</p>
+
+                            {% if rating_form.non_field_errors %}
+                                <div class="nv-field-error mb-2">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ rating_form.non_field_errors.0 }}
+                                </div>
+                            {% endif %}
+
+                            <form method="post" action="{% url 'add_rating' story.pk %}" novalidate>
+                                {% csrf_token %}
+
+                                <div class="nv-rating-input" data-rating-input>
+                                    <div class="nv-star-picker" role="group" aria-label="Choose a star rating">
+                                        {% for i in "12345" %}
+                                            <button type="button" class="nv-star" data-score="{{ forloop.counter }}"
+                                                    aria-label="{{ forloop.counter }} star{{ forloop.counter|pluralize }}">
+                                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="nv-rating-input__field">
+                                        <label class="form-label" for="{{ rating_form.score.id_for_label }}">Score</label>
+                                        {{ rating_form.score }}
+                                    </div>
+                                </div>
+                                <p class="nv-rating-hint" data-rating-hint>No rating selected yet</p>
+
+                                {% if rating_form.score.errors %}
+                                    <div class="nv-field-error mt-2">
+                                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                        {{ rating_form.score.errors.0 }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="mt-3">
+                                    <label class="form-label" for="{{ rating_form.review.id_for_label }}">
+                                        {{ rating_form.review.label }}
+                                    </label>
+                                    {{ rating_form.review }}
+                                    {% if rating_form.review.errors %}
+                                        <div class="nv-field-error">
+                                            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                            {{ rating_form.review.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <button type="submit" class="btn btn-primary mt-3">
+                                    <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+                                    Post rating
+                                </button>
+                            </form>
+                        </div>
+                    {% elif not user.is_authenticated %}
+                        <div class="nv-rating-gate">
+                            <span class="nv-rating-gate__icon" aria-hidden="true">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <div class="nv-rating-gate__body">
+                                <h3>Log in to leave a rating</h3>
+                                <p>
+                                    Reviews are tied to an account so every note
+                                    stays honest and easy to find again.
+                                </p>
+                            </div>
+                            <div class="nv-rating-gate__actions">
+                                <a class="btn btn-primary btn-sm"
+                                   href="{% url 'login' %}?next={{ request.path|urlencode }}">
+                                    Log in
+                                </a>
+                                <a class="btn btn-outline-secondary btn-sm"
+                                   href="{% url 'register' %}?next={{ request.path|urlencode }}">
+                                    Sign up
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if ratings %}
+                        <div class="nv-review-list">
+                            {% for rating in ratings %}
+                                <article class="nv-review">
+                                    <div class="nv-review__head">
+                                        <div class="nv-review__who">
+                                            <span class="nv-review__avatar" aria-hidden="true">R</span>
+                                            <div>
+                                                <strong>Reader</strong>
+                                                <div class="nv-stars" aria-label="{{ rating.score }} out of 5 stars">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= rating.score %}
+                                                            <i class="fa-solid fa-star"></i>
+                                                        {% else %}
+                                                            <i class="fa-solid fa-star is-empty"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="nv-review__date">{{ rating.created_at|date:"M j, Y" }}</span>
+                                    </div>
+
+                                    {% if rating.review %}
+                                        <p>{{ rating.review }}</p>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="nv-muted mb-1">
+                                <i class="fa-regular fa-comment me-1" aria-hidden="true"></i>
+                                No reader notes yet.
+                            </p>
+                            <p class="nv-muted small mb-0">Be the first to rate this story.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Related stories -->
+            {% if related_stories %}
+                <section class="mt-5" aria-labelledby="relatedHeading">
+                    <header class="nv-section__head">
+                        <div>
+                            <span class="nv-eyebrow">More like this</span>
+                            <h2 id="relatedHeading" style="font-size: clamp(1.5rem, 2.5vw, 2rem);">
+                                From the same genre
+                            </h2>
+                        </div>
+                    </header>
+
+                    <div class="row g-3">
+                        {% for related in related_stories %}
+                            <div class="col-md-4">
+                                <article class="nv-related-card">
+                                    <a class="nv-related-card__cover" href="{% url 'story_detail' related.pk %}"
+                                       aria-label="Open {{ related.title }}">
+                                        {% if related.cover_image %}
+                                            <img src="{{ related.cover_image.url }}"
+                                                 alt="Cover of {{ related.title }}" loading="lazy">
+                                        {% else %}
+                                            <span class="nv-cover-fallback">
+                                                <span class="nv-cover-fallback__letter" aria-hidden="true">{{ related.title|first }}</span>
+                                            </span>
+                                        {% endif %}
+                                    </a>
+                                    <div class="nv-related-card__body">
+                                        <h3><a href="{% url 'story_detail' related.pk %}">{{ related.title }}</a></h3>
+                                        <p>by {{ related.author_name }}</p>
+                                        <a class="nv-text-link" href="{% url 'story_detail' related.pk %}">
+                                            View story
+                                            <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

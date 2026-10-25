@@ -1,0 +1,315 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}Dashboard — Novera{% endblock %}
+
+{% block content %}
+<div class="container nv-dash">
+
+    <!-- Header -->
+    <header class="nv-dash__head">
+        <div>
+            <span class="nv-eyebrow">Overview</span>
+            <h1>Library dashboard</h1>
+            <p>Your collection at a glance — what's growing, what's finished, and what readers love.</p>
+        </div>
+
+        <div class="nv-dash__actions">
+            <a href="{% url 'home' %}" class="btn btn-outline-ink">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Back to library
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStoryModal">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                Add new story
+            </button>
+        </div>
+    </header>
+
+    <!-- Status statistics -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-xl-3">
+            <div class="nv-stat">
+                <span class="nv-stat__icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Total stories</p>
+                <p class="nv-stat__value">{{ total_stories }}</p>
+                <p class="nv-stat__meta">Across every shelf in the library</p>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="nv-stat nv-stat--accent">
+                <span class="nv-stat__icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Ongoing</p>
+                <p class="nv-stat__value">{{ ongoing_count }}</p>
+                <p class="nv-stat__meta">Stories still being written</p>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="nv-stat">
+                <span class="nv-stat__icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Completed</p>
+                <p class="nv-stat__value">{{ completed_count }}</p>
+                <p class="nv-stat__meta">Ready for readers to finish</p>
+            </div>
+        </div>
+
+        <div class="col-6 col-xl-3">
+            <div class="nv-stat nv-stat--muted">
+                <span class="nv-stat__icon"><i class="fa-solid fa-file-pen" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Drafts</p>
+                <p class="nv-stat__value">{{ draft_count }}</p>
+                <p class="nv-stat__meta">Work in progress, not shared yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Highlight statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="nv-stat nv-stat--dark">
+                <span class="nv-stat__icon"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Average rating</p>
+                <p class="nv-stat__value">{{ avg_rating|floatformat:1 }}<small> / 5</small></p>
+                <p class="nv-stat__meta">The overall score across your collection</p>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="nv-stat">
+                <span class="nv-stat__icon"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
+                <p class="nv-stat__label">Total views</p>
+                <p class="nv-stat__value">{{ total_views }}</p>
+                <p class="nv-stat__meta">Every story opening recorded so far</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Genres -->
+        <div class="col-xl-5">
+            <section class="nv-panel h-100" aria-labelledby="genresHeading">
+                <div class="nv-panel__head">
+                    <h2 id="genresHeading">
+                        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        Top genres
+                    </h2>
+                    <span class="nv-panel__hint">By story count</span>
+                </div>
+
+                <div class="nv-panel__body">
+                    {% for stat in genre_stats %}
+                        <div class="nv-bar-row">
+                            <div class="nv-bar-row__top">
+                                <span>{{ stat.genre|default:"Uncategorized" }}</span>
+                                <span>{{ stat.count }} stor{{ stat.count|pluralize:"y,ies" }}</span>
+                            </div>
+                            <div class="nv-bar"
+                                 role="img"
+                                 aria-label="{{ stat.genre|default:'Uncategorized' }}: {{ stat.count }} of {{ total_stories }} stories">
+                                <span style="width: {% widthratio stat.count total_stories 100 %}%"></span>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4">
+                            <p class="nv-muted mb-3">No genres to display yet.</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal" data-bs-target="#addStoryModal">
+                                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                Add your first story
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <!-- Top rated -->
+        <div class="col-xl-7">
+            <section class="nv-table-wrap h-100" aria-labelledby="topRatedHeading">
+                <div class="nv-panel__head">
+                    <h2 id="topRatedHeading">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        Top rated stories
+                    </h2>
+                    <a class="nv-text-link" href="{% url 'home' %}?sort_by=-rating">
+                        View all
+                        <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Story</th>
+                                <th class="d-none d-lg-table-cell">Genre</th>
+                                <th>Rating</th>
+                                <th class="d-none d-md-table-cell">Views</th>
+                                <th class="pe-4 text-end">Open</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for story in top_stories %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="nv-story-cell">
+                                            <span class="nv-story-cell__thumb">
+                                                {% if story.cover_image %}
+                                                    <img src="{{ story.cover_image.url }}" alt="Cover of {{ story.title }}">
+                                                {% else %}
+                                                    <span class="nv-story-cell__thumb-empty">
+                                                        <i class="fa-solid fa-book" aria-hidden="true"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </span>
+                                            <span class="nv-story-cell__text">
+                                                <strong>{{ story.title }}</strong>
+                                                <small>{{ story.author_name }}</small>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="d-none d-lg-table-cell"><span class="nv-pill nv-pill--ghost">{{ story.genre|capfirst }}</span></td>
+                                    <td>
+                                        <span class="d-inline-flex align-items-center gap-1">
+                                            <i class="fa-solid fa-star nv-accent" aria-hidden="true"></i>
+                                            {{ story.rating|floatformat:1 }}
+                                        </span>
+                                    </td>
+                                    <td class="d-none d-md-table-cell nv-muted">{{ story.views_count }}</td>
+                                    <td class="pe-4 text-end">
+                                        <a class="nv-icon-link" href="{% url 'story_detail' story.pk %}"
+                                           aria-label="Open {{ story.title }}">
+                                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="nv-empty__icon">
+                                            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                                        </div>
+                                        <h3 style="font-size: 1.3rem;">Your library is empty</h3>
+                                        <p class="nv-muted mb-3">Add a story to see it ranked here.</p>
+                                        <button type="button" class="btn btn-primary"
+                                                data-bs-toggle="modal" data-bs-target="#addStoryModal">
+                                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                            Add your first story
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Most viewed -->
+    <section class="nv-panel mt-4" aria-labelledby="mostViewedHeading">
+        <div class="nv-panel__head">
+            <h2 id="mostViewedHeading">
+                <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                Most viewed stories
+            </h2>
+            <a class="nv-text-link" href="{% url 'home' %}?sort_by=-views_count">
+                View all
+                <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="nv-panel__body">
+            <div class="nv-ranked">
+                {% for story in most_viewed %}
+                    <div class="nv-ranked__item">
+                        <span class="nv-ranked__num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <div class="nv-ranked__main">
+                            <h4>
+                                <a href="{% url 'story_detail' story.pk %}">{{ story.title }}</a>
+                            </h4>
+                            <p>{{ story.author_name }} · {{ story.genre|capfirst }}</p>
+                        </div>
+                        <span class="nv-ranked__views">
+                            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                            {{ story.views_count }}
+                        </span>
+                        <a class="nv-icon-link" href="{% url 'story_detail' story.pk %}"
+                           aria-label="Open {{ story.title }}">
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                {% empty %}
+                    <p class="nv-muted mb-0">Your most viewed stories will appear here.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Add story modal -->
+<div class="modal fade" id="addStoryModal" tabindex="-1" aria-labelledby="addStoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0">
+
+            <div class="modal-header nv-modal-header">
+                <div>
+                    <h2 class="modal-title" id="addStoryModalLabel">
+                        <i class="fa-solid fa-feather-pointed me-2" aria-hidden="true"></i>
+                        Add a new story
+                    </h2>
+                    <p>Give your next story a place on the shelf.</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <form method="post" action="{% url 'story_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="dashboard">
+
+                <div class="modal-body nv-modal-body">
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="fa-solid fa-circle-exclamation me-2" aria-hidden="true"></i>
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        {% for field in form %}
+                            <div class="{% if field.name == 'description' or field.name == 'cover_image' %}col-12{% else %}col-md-6{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="form-label">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+
+                                {% for error in field.errors %}
+                                    <div class="nv-field-error">
+                                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="modal-footer nv-modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                        Save story
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

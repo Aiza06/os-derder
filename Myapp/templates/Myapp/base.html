@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Novera — a beautifully organised home for your stories, authors and reviews.">
+    <meta name="theme-color" content="#1d4d3f">
+
+    <title>{% block title %}Novera — Story Library{% endblock %}</title>
+
+    <link rel="icon" href="{% static 'Myapp/img/favicon.svg' %}" type="image/svg+xml">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Novera -->
+    <link rel="stylesheet" href="{% static 'Myapp/css/style.css' %}">
+
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('novera-theme');
+                var theme = saved === 'dark' || saved === 'light' ? saved : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (error) {
+                /* Local storage can be unavailable in private mode. */
+            }
+            document.documentElement.classList.add('js');
+        })();
+    </script>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <a class="nv-skip" href="#main">Skip to content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg nv-nav sticky-top" id="siteNav">
+        <div class="container">
+            <a class="navbar-brand nv-brand"
+               href="{% if user.is_authenticated %}{% url 'home' %}{% else %}{% url 'login' %}{% endif %}"
+               aria-label="Novera home">
+                <span class="nv-brand__mark" aria-hidden="true">N</span>
+                <span class="nv-brand__text">
+                    Novera
+                    <small>Story library</small>
+                </span>
+            </a>
+
+            <button class="navbar-toggler nv-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'story_detail' %}active{% endif %}"
+                               href="{% url 'home' %}">
+                                <i class="fa-solid fa-book-open" aria-hidden="true"></i>Library
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                               href="{% url 'dashboard' %}">
+                                <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item ms-lg-3">
+                        <button class="nv-theme-toggle" type="button" id="themeToggle"
+                                aria-label="Switch between light and dark theme"
+                                title="Switch theme">
+                            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                            <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                        </button>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-primary btn-sm nv-nav__cta" href="{% url 'story_create' %}">
+                                <i class="fa-solid fa-plus" aria-hidden="true"></i>Add story
+                            </a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <div class="dropdown nv-user">
+                                <button class="nv-user__btn" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                        aria-label="Account menu">
+                                    <span class="nv-avatar" aria-hidden="true">
+                                        {% if user.first_name %}{{ user.first_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
+                                    </span>
+                                    <span class="nv-user__name">{{ user.first_name|default:user.username }}</span>
+                                    <i class="fa-solid fa-chevron-down nv-user__caret" aria-hidden="true"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end nv-user__menu">
+                                    <li class="nv-user__head">
+                                        <span class="nv-user__full">{{ user.get_full_name|default:user.username }}</span>
+                                        {% if user.email %}
+                                            <span class="nv-user__email">{{ user.email }}</span>
+                                        {% endif %}
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'dashboard' %}">
+                                            <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+                                            Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'story_create' %}">
+                                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                                            Add a story
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="post" action="{% url 'logout' %}">
+                                            {% csrf_token %}
+                                            <button class="dropdown-item nv-user__logout" type="submit">
+                                                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                                                Log out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-lg-2">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}"
+                               href="{% url 'login' %}">
+                                <i class="fa-regular fa-user" aria-hidden="true"></i>Log in
+                            </a>
+                        </li>
+                        <li class="nav-item ms-lg-1">
+                            <a class="btn btn-primary btn-sm nv-nav__cta" href="{% url 'register' %}">
+                                Sign up
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="nv-toasts" aria-live="polite" aria-atomic="true">
+            {% for message in messages %}
+                <div class="nv-toast nv-toast--{{ message.tags|default:'info' }} alert alert-dismissible fade show"
+                     role="alert">
+                    <span class="nv-toast__icon" aria-hidden="true">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-check"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                            <i class="fa-solid fa-exclamation"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info"></i>
+                        {% endif %}
+                    </span>
+                    <div class="nv-toast__body">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="nv-main" id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="nv-footer">
+        <div class="container">
+            <div class="row g-4 g-lg-5">
+                <div class="col-lg-5">
+                    <a class="nv-footer__brand"
+                       href="{% if user.is_authenticated %}{% url 'home' %}{% else %}{% url 'login' %}{% endif %}">
+                        <span class="nv-brand__mark" aria-hidden="true">N</span>
+                        <span class="nv-brand__text">
+                            Novera
+                            <small>Story library</small>
+                        </span>
+                    </a>
+                    <p class="nv-footer__tagline">
+                        A quiet, beautiful home for the stories you collect —
+                        discover new worlds, keep track of favourites, and share
+                        what you think.
+                    </p>
+                </div>
+
+                {% if user.is_authenticated %}
+                    <div class="col-6 col-lg-2">
+                        <h2>Explore</h2>
+                        <ul class="nv-footer__links">
+                            <li><a href="{% url 'home' %}">Library</a></li>
+                            <li><a href="{% url 'home' %}#library">Browse stories</a></li>
+                            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-6 col-lg-2">
+                        <h2>Contribute</h2>
+                        <ul class="nv-footer__links">
+                            <li><a href="{% url 'story_create' %}">Add a story</a></li>
+                            <li><a href="{% url 'dashboard' %}">Manage library</a></li>
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="{% if user.is_authenticated %}col-lg-3{% else %}col-lg-4 ms-lg-auto{% endif %}">
+                    <h2>About</h2>
+                    <p class="nv-footer__meta mb-0">
+                        <strong>Novera</strong> is a small story collection system
+                        built for readers and writers. Every cover, chapter and
+                        review lives in one tidy place.
+                    </p>
+                </div>
+            </div>
+
+            <div class="nv-footer__bottom">
+                <span>&copy; {% now "Y" %} Novera. All stories belong to their authors.</span>
+                <span><i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>Made for storytellers</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'Myapp/js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+{% comment %}
+    Decorative marketing panel shared by the login and register pages.
+{% endcomment %}
+<aside class="nv-auth__aside">
+    <div class="nv-auth__intro">
+        <span class="nv-auth__eyebrow">
+            <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+            Novera accounts
+        </span>
+
+        <h2>Your shelf, exactly where you left it.</h2>
+
+        <p class="nv-auth__lead">
+            Sign in to add stories, keep your library tidy and hold on to every
+            review you have written.
+        </p>
+    </div>
+
+    <ul class="nv-auth__points">
+        <li>
+            <span class="nv-auth__point-icon" aria-hidden="true">
+                <i class="fa-solid fa-book-bookmark"></i>
+            </span>
+            <span>
+                <strong>Build your collection</strong>
+                <small>Covers, chapters and descriptions in one place.</small>
+            </span>
+        </li>
+        <li>
+            <span class="nv-auth__point-icon" aria-hidden="true">
+                <i class="fa-solid fa-star-half-stroke"></i>
+            </span>
+            <span>
+                <strong>Rate what you read</strong>
+                <small>Leave a score and a review for other readers.</small>
+            </span>
+        </li>
+        <li>
+            <span class="nv-auth__point-icon" aria-hidden="true">
+                <i class="fa-solid fa-lock"></i>
+            </span>
+            <span>
+                <strong>Yours alone</strong>
+                <small>Your account keeps management tools behind a door.</small>
+            </span>
+        </li>
+    </ul>
+
+    {% if story_preview %}
+        <div class="nv-auth__shelf" aria-hidden="true">
+            {% for story in story_preview %}
+                <span class="nv-auth__book">
+                    {% if story.cover_image %}
+                        <img src="{{ story.cover_image.url }}" alt="">
+                    {% else %}
+                        <span class="nv-auth__book-fallback">{{ story.title|first }}</span>
+                    {% endif %}
+                </span>
+            {% endfor %}
+            <span class="nv-auth__shelf-note">From the Novera shelves</span>
+        </div>
+    {% endif %}
+</aside>

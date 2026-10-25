@@ -1,0 +1,291 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}Novera — Story Collection{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="nv-hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="nv-eyebrow">The Novera collection</span>
+
+                <h1 class="nv-hero__title">
+                    Every story deserves a <em>beautiful shelf.</em>
+                </h1>
+
+                <p class="nv-hero__lead">
+                    Discover new worlds, organise the books you love, and keep
+                    every cover, chapter and review in one quiet, tidy place.
+                </p>
+
+                <div class="nv-hero__actions">
+                    <a href="#library" class="btn btn-primary btn-lg">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        Browse the library
+                    </a>
+                    <a href="{% url 'story_create' %}" class="btn btn-outline-ink btn-lg">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Add a story
+                    </a>
+                </div>
+
+                <dl class="nv-hero__stats">
+                    <div class="nv-hero__stat">
+                        <dt>Stories</dt>
+                        <dd>{{ stories.paginator.count }}</dd>
+                    </div>
+                    <div class="nv-hero__stat">
+                        <dt>Genres</dt>
+                        <dd>{{ genres|length }}</dd>
+                    </div>
+                    <div class="nv-hero__stat">
+                        <dt>Editor's picks</dt>
+                        <dd>{{ featured|length }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="nv-collage" aria-label="Featured stories">
+                    <span class="nv-collage__label">
+                        <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                        Editor's picks
+                    </span>
+
+                    {% for story in featured|slice:":3" %}
+                        <a class="nv-collage__item nv-collage__item--{{ forloop.counter }}"
+                           href="{% url 'story_detail' story.pk %}">
+                            {% if story.cover_image %}
+                                <img src="{{ story.cover_image.url }}"
+                                     alt="Cover of {{ story.title }}">
+                            {% else %}
+                                <span class="nv-cover-fallback">
+                                    <span class="nv-cover-fallback__letter" aria-hidden="true">{{ story.title|first }}</span>
+                                    <span class="nv-cover-fallback__name">{{ story.title }}</span>
+                                </span>
+                            {% endif %}
+                            <span class="nv-collage__meta">
+                                <strong>{{ story.title }}</strong>
+                                <small>{{ story.genre }}</small>
+                            </span>
+                        </a>
+                    {% empty %}
+                        <div class="nv-collage__item nv-collage__item--1 nv-collage__empty">
+                            <div>
+                                <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+                                <span>Your featured stories will be arranged here.</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search & filters -->
+<section class="nv-toolbar">
+    <div class="container">
+        <form method="get" action="{% url 'home' %}" class="nv-filter" role="search">
+            <div class="nv-filter__search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <label class="visually-hidden" for="searchQuery">Search stories</label>
+                <input type="text" class="form-control" id="searchQuery" name="q"
+                       placeholder="Search by title, author or genre…"
+                       value="{{ query }}" autocomplete="off">
+            </div>
+
+            <div>
+                <label class="visually-hidden" for="filterGenre">Genre</label>
+                <select class="form-select" id="filterGenre" name="genre">
+                    <option value="">All genres</option>
+                    {% for g in genres %}
+                        <option value="{{ g }}" {% if g == selected_genre %}selected{% endif %}>
+                            {{ g|capfirst }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="visually-hidden" for="filterStatus">Status</label>
+                <select class="form-select" id="filterStatus" name="status">
+                    <option value="">Any status</option>
+                    <option value="Ongoing" {% if selected_status == "Ongoing" %}selected{% endif %}>Ongoing</option>
+                    <option value="Completed" {% if selected_status == "Completed" %}selected{% endif %}>Completed</option>
+                    <option value="Draft" {% if selected_status == "Draft" %}selected{% endif %}>Draft</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="visually-hidden" for="filterSort">Sort by</label>
+                <select class="form-select" id="filterSort" name="sort_by">
+                    <option value="-date_published" {% if sort_by == "-date_published" %}selected{% endif %}>Newest first</option>
+                    <option value="-rating" {% if sort_by == "-rating" %}selected{% endif %}>Top rated</option>
+                    <option value="-views_count" {% if sort_by == "-views_count" %}selected{% endif %}>Most viewed</option>
+                    <option value="title" {% if sort_by == "title" %}selected{% endif %}>Title A–Z</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                Apply
+            </button>
+        </form>
+
+        <div class="nv-chips" aria-label="Filter by genre">
+            <a class="nv-chip {% if not selected_genre %}is-active{% endif %}"
+               href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                All genres
+            </a>
+            {% for g in genres %}
+                <a class="nv-chip {% if g == selected_genre %}is-active{% endif %}"
+                   href="?q={{ query|urlencode }}&amp;genre={{ g|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                    {{ g|capfirst }}
+                </a>
+            {% endfor %}
+
+            {% if query or selected_genre or selected_status %}
+                <a class="nv-chip nv-chip--ghost" href="{% url 'home' %}#library">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>Clear filters
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured stories -->
+{% if featured %}
+<section class="nv-section">
+    <div class="container">
+        <header class="nv-section__head">
+            <div>
+                <span class="nv-eyebrow">Curated shelf</span>
+                <h2>Stories worth opening first</h2>
+            </div>
+            <p class="nv-section__aside">
+                The highest rated books in the collection right now — a good
+                place to start if you're not sure what to read next.
+            </p>
+        </header>
+
+        <div class="row g-4">
+            {% for story in featured %}
+                <div class="col-md-6 col-lg-4">
+                    {% include "Myapp/_story_card.html" with story=story featured=True only %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Library -->
+<section class="nv-section nv-section--tint" id="library">
+    <div class="container">
+        <header class="nv-section__head">
+            <div>
+                <span class="nv-eyebrow">The library</span>
+                <h2>Browse every story</h2>
+            </div>
+            <p class="nv-section__aside">
+                Use the search bar and filters above to narrow the shelves by
+                title, author, genre or reading status.
+            </p>
+        </header>
+
+        <div class="nv-results-bar">
+            <p>
+                {% if query %}
+                    Results for <strong>“{{ query }}”</strong> ·
+                {% endif %}
+                <strong>{{ stories.paginator.count }}</strong>
+                stor{{ stories.paginator.count|pluralize:"y,ies" }}
+                {% if selected_genre %}in <strong>{{ selected_genre|capfirst }}</strong>{% endif %}
+                {% if selected_status %}marked <strong>{{ selected_status }}</strong>{% endif %}
+            </p>
+            {% if stories.has_other_pages %}
+                <span class="nv-pager__status">Page {{ stories.number }} of {{ stories.paginator.num_pages }}</span>
+            {% endif %}
+        </div>
+
+        {% if stories %}
+            <div class="row g-4">
+                {% for story in stories %}
+                    <div class="col-6 col-lg-3">
+                        {% include "Myapp/_story_card.html" with story=story only %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if stories.has_other_pages %}
+                <nav class="nv-pager" aria-label="Story pages">
+                    {% if stories.has_previous %}
+                        <a class="nv-pager__btn"
+                           href="?page=1&amp;q={{ query|urlencode }}&amp;genre={{ selected_genre|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
+                            <span>First</span>
+                        </a>
+                        <a class="nv-pager__btn"
+                           href="?page={{ stories.previous_page_number }}&amp;q={{ query|urlencode }}&amp;genre={{ selected_genre|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                            <span>Previous</span>
+                        </a>
+                    {% else %}
+                        <span class="nv-pager__btn is-disabled" aria-disabled="true">
+                            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                            <span>Previous</span>
+                        </span>
+                    {% endif %}
+
+                    <span class="nv-pager__status">
+                        <strong>{{ stories.number }}</strong> / {{ stories.paginator.num_pages }}
+                    </span>
+
+                    {% if stories.has_next %}
+                        <a class="nv-pager__btn"
+                           href="?page={{ stories.next_page_number }}&amp;q={{ query|urlencode }}&amp;genre={{ selected_genre|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        </a>
+                        <a class="nv-pager__btn"
+                           href="?page={{ stories.paginator.num_pages }}&amp;q={{ query|urlencode }}&amp;genre={{ selected_genre|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;sort_by={{ sort_by|urlencode }}">
+                            <span>Last</span>
+                            <i class="fa-solid fa-angles-right" aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <span class="nv-pager__btn is-disabled" aria-disabled="true">
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                        </span>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="nv-empty">
+                <span class="nv-empty__icon">
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                </span>
+                <h3>No stories on this shelf yet</h3>
+                <p>
+                    Nothing matches those filters. Try a different search, or
+                    add the first story to your collection.
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="{% url 'home' %}#library" class="btn btn-outline-ink">
+                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                        Clear filters
+                    </a>
+                    <a href="{% url 'story_create' %}" class="btn btn-primary">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Add a story
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

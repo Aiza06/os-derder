@@ -1,0 +1,161 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}Create an account — Novera{% endblock %}
+
+{% block content %}
+<div class="nv-auth">
+    <div class="container">
+        <div class="nv-auth__grid">
+            {% include "Myapp/auth/_aside.html" with story_preview=story_preview only %}
+
+            <section class="nv-auth__panel">
+                <div class="nv-auth__card">
+                    <header class="nv-auth__head">
+                        <span class="nv-eyebrow">Join the library</span>
+                        <h1>Create your account</h1>
+                        <p>
+                            Already have one?
+                            <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Log in instead</a>
+                        </p>
+                    </header>
+
+                    {% if form.non_field_errors %}
+                        <div class="nv-auth__error" role="alert">
+                            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                            <span>{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'register' %}" class="nv-auth__form" novalidate>
+                        {% csrf_token %}
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="nv-auth__row">
+                            <div class="nv-auth__field">
+                                <label class="form-label" for="{{ form.first_name.id_for_label }}">
+                                    {{ form.first_name.label }}
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <p class="nv-field-error">
+                                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                        {{ form.first_name.errors.0 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                            <div class="nv-auth__field">
+                                <label class="form-label" for="{{ form.last_name.id_for_label }}">
+                                    {{ form.last_name.label }}
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <p class="nv-field-error">
+                                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                        {{ form.last_name.errors.0 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.username.id_for_label }}">
+                                {{ form.username.label }}
+                            </label>
+                            <div class="nv-input-icon">
+                                <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.username.errors.0 }}
+                                </p>
+                            {% elif form.username.help_text %}
+                                <p class="nv-auth__hint">{{ form.username.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.email.id_for_label }}">
+                                {{ form.email.label }}
+                            </label>
+                            <div class="nv-input-icon">
+                                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.email.errors.0 }}
+                                </p>
+                            {% elif form.email.help_text %}
+                                <p class="nv-auth__hint">{{ form.email.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.password1.id_for_label }}">
+                                {{ form.password1.label }}
+                            </label>
+                            <div class="nv-input-icon nv-password">
+                                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                {{ form.password1 }}
+                                <button type="button" class="nv-password__toggle"
+                                        data-password-toggle
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+                                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.password1.errors.0 }}
+                                </p>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                                <div class="nv-auth__hint">{{ form.password1.help_text|safe }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.password2.id_for_label }}">
+                                {{ form.password2.label }}
+                            </label>
+                            <div class="nv-input-icon nv-password">
+                                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                {{ form.password2 }}
+                                <button type="button" class="nv-password__toggle"
+                                        data-password-toggle
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+                                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.password2.errors.0 }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg nv-auth__submit">
+                            Create account
+                            <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+                        </button>
+                    </form>
+
+                    <p class="nv-auth__fine">
+                        By creating an account you agree to treat every story and
+                        every reader with care.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

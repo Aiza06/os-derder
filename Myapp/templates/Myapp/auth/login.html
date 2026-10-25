@@ -1,0 +1,87 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}Log in — Novera{% endblock %}
+
+{% block content %}
+<div class="nv-auth">
+    <div class="container">
+        <div class="nv-auth__grid">
+            {% include "Myapp/auth/_aside.html" with story_preview=story_preview only %}
+
+            <section class="nv-auth__panel">
+                <div class="nv-auth__card">
+                    <header class="nv-auth__head">
+                        <span class="nv-eyebrow">Welcome back</span>
+                        <h1>Log in to Novera</h1>
+                        <p>
+                            New to the library?
+                            <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a>
+                        </p>
+                    </header>
+
+                    {% if form.non_field_errors %}
+                        <div class="nv-auth__error" role="alert">
+                            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                            <span>{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login' %}" class="nv-auth__form" novalidate>
+                        {% csrf_token %}
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.username.id_for_label }}">
+                                {{ form.username.label }}
+                            </label>
+                            <div class="nv-input-icon">
+                                <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.username.errors.0 }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="nv-auth__field">
+                            <label class="form-label" for="{{ form.password.id_for_label }}">
+                                {{ form.password.label }}
+                            </label>
+                            <div class="nv-input-icon nv-password">
+                                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                {{ form.password }}
+                                <button type="button" class="nv-password__toggle"
+                                        data-password-toggle
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+                                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                <p class="nv-field-error">
+                                    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                    {{ form.password.errors.0 }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg nv-auth__submit">
+                            Log in
+                            <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+                        </button>
+                    </form>
+
+                    <p class="nv-auth__fine">
+                        Your session stays open for two weeks on this device.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

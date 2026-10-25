@@ -1,0 +1,73 @@
+{% extends "Myapp/base.html" %}
+
+{% block title %}Delete {{ story.title }} — Novera{% endblock %}
+
+{% block content %}
+<div class="container nv-page">
+
+    <nav class="nv-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}">Library</a>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <a href="{% url 'story_detail' story.pk %}">{{ story.title }}</a>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <span class="is-current" aria-current="page">Delete</span>
+    </nav>
+
+    <section class="nv-danger-card" aria-labelledby="deleteHeading">
+        <span class="nv-danger-card__icon">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        </span>
+
+        <span class="nv-eyebrow nv-eyebrow--plain" style="justify-content: center;">Careful now</span>
+        <h1 id="deleteHeading">Delete this story?</h1>
+
+        <p>
+            You are about to permanently remove
+            <strong>“{{ story.title }}”</strong> and everything attached to it.
+            This cannot be undone.
+        </p>
+
+        <dl class="nv-danger-target row g-0">
+            <div class="col-6">
+                <dt>Author</dt>
+                <dd>{{ story.author_name }}</dd>
+            </div>
+            <div class="col-6">
+                <dt>Genre</dt>
+                <dd>{{ story.genre|capfirst }}</dd>
+            </div>
+            <div class="col-6 mt-3">
+                <dt>Status</dt>
+                <dd><span class="nv-pill nv-pill--{{ story.status|lower }}">{{ story.status }}</span></dd>
+            </div>
+            <div class="col-6 mt-3">
+                <dt>Views</dt>
+                <dd>{{ story.views_count }}</dd>
+            </div>
+        </dl>
+
+        <div class="nv-danger-note">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>
+                The story, its reader ratings, view history and uploaded cover
+                image will all be deleted.
+            </span>
+        </div>
+
+        <form method="post" action="{% url 'story_delete' story.pk %}" class="nv-danger-actions">
+            {% csrf_token %}
+
+            <a href="{% url 'story_detail' story.pk %}" class="btn btn-outline-ink btn-lg">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Keep story
+            </a>
+
+            <button type="submit" class="btn btn-danger btn-lg"
+                    onclick="return confirm('Permanently delete “{{ story.title|escapejs }}”? This cannot be undone.');">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                Delete forever
+            </button>
+        </form>
+    </section>
+</div>
+{% endblock %}

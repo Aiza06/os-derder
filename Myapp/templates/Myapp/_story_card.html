@@ -1,0 +1,48 @@
+{% comment %}
+    Shared story card.
+    Usage: {% include "Myapp/_story_card.html" with story=story featured=True %}
+{% endcomment %}
+<article class="nv-book-card reveal {% if featured %}nv-book-card--featured{% endif %}">
+    <a class="nv-book-card__cover" href="{% url 'story_detail' story.pk %}"
+       aria-label="Open {{ story.title }}">
+        {% if story.cover_image %}
+            <img src="{{ story.cover_image.url }}" alt="Cover of {{ story.title }}" loading="lazy">
+        {% else %}
+            <span class="nv-cover-fallback">
+                <span class="nv-cover-fallback__letter" aria-hidden="true">{{ story.title|first }}</span>
+                <span class="nv-cover-fallback__name">{{ story.title }}</span>
+            </span>
+        {% endif %}
+
+        <span class="nv-book-card__badges">
+            <span class="nv-pill nv-pill--{{ story.status|lower }}">{{ story.status }}</span>
+            <span class="nv-rating-badge">
+                <i class="fa-solid fa-star" aria-hidden="true"></i>{{ story.rating|floatformat:1 }}
+            </span>
+        </span>
+    </a>
+
+    <div class="nv-book-card__body">
+        <p class="nv-book-card__genre">{{ story.genre }}</p>
+
+        <h3 class="nv-book-card__title">
+            <a href="{% url 'story_detail' story.pk %}">{{ story.title }}</a>
+        </h3>
+
+        <p class="nv-book-card__author">by {{ story.author_name }}</p>
+
+        {% if featured %}
+            <p class="nv-book-card__desc">{{ story.description|truncatewords:18 }}</p>
+        {% endif %}
+
+        <div class="nv-book-card__foot">
+            <span class="nv-book-card__views">
+                <i class="fa-regular fa-eye" aria-hidden="true"></i>{{ story.views_count }} views
+            </span>
+            <a class="nv-link-arrow" href="{% url 'story_detail' story.pk %}">
+                {% if featured %}Read story{% else %}Details{% endif %}
+                <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+</article>
